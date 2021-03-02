@@ -1,17 +1,60 @@
 const todoResolvers = {
   Query: {
-    todos: async (parent, args, { models }) => {
-      return await models.todo.findAll();
+    todos: async (parent, args, { me, Todo }) => {
+      return await Todo.findAll({ where: { userId: me.id } });
+    },
+    todo: async (parent, { uuid }, { me, Todo }) => {
+      try {
+        const todo = await Todo.findOne({ where: { uuid } });
+        return todo;
+      } catch (error) {
+        throw new Error(error);
+      }
     },
   },
 
   Mutation: {
-    addTodo: async (parents, { description }, { me, models }) => {
+    addTodo: async (parents, { description }, { me, Todo }) => {
       try {
-        return await models.todo.create({
+        return await Todo.create({
           description,
           userId: me.id,
         });
+      } catch (error) {
+        throw new Error(error);
+      }
+    },
+    updateTodo: async (parents, { id, description }, { me, Todo }) => {
+      try {
+        let todo = await Todo.findOne({ where: { id } });
+
+        todo.description = description;
+
+        await todo.save();
+        return todo;
+      } catch (error) {
+        throw new Error(error);
+      }
+    },
+    deleteTodo: async (parent, { id }, { me, Todo }) => {
+      try {
+        const todo = await Todo.findOne({ where: { id } });
+
+        await todo.destroy();
+
+        return todo;
+      } catch (error) {
+        throw new Error(error);
+      }
+    },
+  },
+
+  Todo: {
+    userId: async (parent, args, { me, User }) => {
+      try {
+        const user = await User.findByPk(me.id);
+
+        return user;
       } catch (error) {
         throw new Error(error);
       }

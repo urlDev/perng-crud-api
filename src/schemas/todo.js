@@ -14,6 +14,7 @@ const todoSchema = gql`
 
   type Todo {
     id: ID!
+    uuid: ID!
     description: String!
     userId: User!
   }

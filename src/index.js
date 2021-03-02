@@ -5,7 +5,7 @@ const { ApolloServer } = require('apollo-server-express');
 
 const schema = require('./schemas/index');
 const resolvers = require('./resolvers/index');
-const { models, sequelize } = require('./models/index');
+const { sequelize, User, Todo } = require('../models');
 
 const app = express();
 
@@ -16,15 +16,16 @@ const server = new ApolloServer({
   resolvers,
   context: async (req) => {
     return {
-      models,
-      // me: await models.user.findByLogin('Can Ural'),
+      User,
+      Todo,
+      me: await User.findByLogin('can@can.com'),
     };
   },
 });
 
 server.applyMiddleware({ app, path: '/graphql' });
 
-sequelize.sync().then(() => {
+sequelize.sync({ force: true }).then(() => {
   app.listen(process.env.PORT, () => {
     console.log(`🚀 App is listening on ${process.env.PORT}`);
   });
