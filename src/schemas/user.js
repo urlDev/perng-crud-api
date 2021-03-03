@@ -8,8 +8,8 @@ const userSchema = gql`
   }
 
   extend type Mutation {
-    signUp(name: String!, email: String!, password: String!): User!
-    signIn(email: String!, password: String!): User!
+    signUp(name: String!, email: String!, password: String!): Token!
+    signIn(email: String!, password: String!): Token!
     deleteUser: User!
     updateUser(email: String!, name: String!, password: String!): User!
   }
@@ -23,14 +23,9 @@ const userSchema = gql`
     todos: [Todo!]
   }
 
-  # type UserResult {
-  # user: User!
-  # token: Token!
-  # }
-
-  # type Token {
-  #   token: String!
-  # }
+  type Token {
+    token: String!
+  }
 `;
 
 module.exports = userSchema;

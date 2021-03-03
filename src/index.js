@@ -6,6 +6,7 @@ const { ApolloServer } = require('apollo-server-express');
 const schema = require('./schemas/index');
 const resolvers = require('./resolvers/index');
 const { sequelize, User, Todo } = require('../models');
+const getMe = require('./utils/auth');
 
 const app = express();
 
@@ -14,11 +15,13 @@ app.use(cors());
 const server = new ApolloServer({
   typeDefs: schema,
   resolvers,
-  context: async (req) => {
+  context: async ({ req }) => {
+    const me = await getMe(req);
     return {
       User,
       Todo,
-      me: await User.findByLogin('can@can.com'),
+      secret: process.env.JWT_SECRET,
+      me,
     };
   },
 });

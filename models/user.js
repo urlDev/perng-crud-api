@@ -1,4 +1,5 @@
 'use strict';
+const bcrypt = require('bcrypt');
 const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
@@ -7,8 +8,8 @@ module.exports = (sequelize, DataTypes) => {
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
-    static associate({ Todo }) {
-      this.hasMany(Todo, { foreignKey: 'userId' });
+    static associate(model) {
+      this.hasMany(model.Todo, { foreignKey: 'userId' });
     }
   }
   User.init(
@@ -56,5 +57,19 @@ module.exports = (sequelize, DataTypes) => {
 
     return user;
   };
+
+  User.beforeCreate(async (user) => {
+    user.password = await user.generatePasswordHash();
+  });
+
+  User.prototype.generatePasswordHash = async function () {
+    return await bcrypt.hash(this.password, 10);
+  };
+
+  User.prototype.validatePassword = async function (password) {
+    console.log(password);
+    return await bcrypt.compare(password, this.password);
+  };
+
   return User;
 };

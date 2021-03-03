@@ -1,3 +1,13 @@
+const jwt = require('jsonwebtoken');
+const {
+  AuthenticationError,
+  UserInputError,
+} = require('apollo-server-express');
+
+const createToken = async ({ id, name, email }, secret, expiresIn) => {
+  return await jwt.sign({ id, name, email }, secret, { expiresIn });
+};
+
 const userResolvers = {
   Query: {
     me: async (parent, args, { me, User }) => {
@@ -6,7 +16,7 @@ const userResolvers = {
   },
 
   Mutation: {
-    signUp: async (parent, { email, password, name }, { User }) => {
+    signUp: async (parent, { email, password, name }, { secret, User }) => {
       try {
         const user = await User.create({
           email,
@@ -14,14 +24,37 @@ const userResolvers = {
           password,
         });
 
-        return user;
+        const token = await createToken(user, secret, '1h');
+
+        return { token };
+      } catch (error) {
+        throw new Error(error);
+      }
+    },
+    signIn: async (parent, { email, password }, { me, User, secret }) => {
+      try {
+        const user = await User.findByLogin(email);
+
+        if (!user) {
+          throw new UserInputError('No user found');
+        }
+
+        const isValid = await user.validatePassword(password);
+
+        if (!isValid) {
+          throw new AuthenticationError('Could not authenticate');
+        }
+
+        const token = await createToken(user, secret, '1h');
+
+        return { token };
       } catch (error) {
         throw new Error(error);
       }
     },
     deleteUser: async (parent, args, { me, User, Todo }) => {
       try {
-        const user = await User.findOne({ where: { uuid: me.uuid } });
+        const user = await User.findOne({ where: { id: me.id } });
 
         // delete all the todos that belongs to the user
         await Todo.destroy({ where: { userId: me.id } });
