@@ -4,14 +4,13 @@ const {
   UserInputError,
 } = require('apollo-server-express');
 
-const createToken = async ({ id, name, email }, secret, expiresIn) => {
-  return await jwt.sign({ id, name, email }, secret, { expiresIn });
-};
-
 const userResolvers = {
   Query: {
     me: async (parent, args, { me, User }) => {
-      return await User.findByPk(me.id);
+      const user = await User.findOne({
+        where: { uuid: me.uuid },
+      });
+      return user;
     },
   },
 
@@ -22,11 +21,13 @@ const userResolvers = {
           email,
           name,
           password,
+          tokens: [],
         });
 
-        const token = await createToken(user, secret, '1h');
+        await user.generateAuthToken();
+        await user.save();
 
-        return { token };
+        return user;
       } catch (error) {
         throw new Error(error);
       }
@@ -45,9 +46,24 @@ const userResolvers = {
           throw new AuthenticationError('Could not authenticate');
         }
 
-        const token = await createToken(user, secret, '1h');
+        await user.generateAuthToken();
 
-        return { token };
+        return user;
+      } catch (error) {
+        throw new Error(error);
+      }
+    },
+    logOut: async (parent, args, { me, User, req }) => {
+      try {
+        const user = await User.findOne({ where: { uuid: me.uuid } });
+
+        user.tokens = user.tokens.filter(
+          (token) => token !== req.headers.authentication
+        );
+
+        await user.save();
+
+        return 'Successfully logged out!';
       } catch (error) {
         throw new Error(error);
       }

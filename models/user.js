@@ -1,5 +1,6 @@
 'use strict';
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
@@ -42,6 +43,9 @@ module.exports = (sequelize, DataTypes) => {
           len: [6, 42],
         },
       },
+      tokens: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+      },
     },
     {
       sequelize,
@@ -61,6 +65,16 @@ module.exports = (sequelize, DataTypes) => {
   User.beforeCreate(async (user) => {
     user.password = await user.generatePasswordHash();
   });
+
+  User.prototype.generateAuthToken = async function () {
+    const token = jwt.sign({ uuid: this.uuid }, process.env.JWT_SECRET);
+
+    this.tokens = [...this.tokens, token];
+
+    await this.save();
+
+    return token;
+  };
 
   User.prototype.generatePasswordHash = async function () {
     return await bcrypt.hash(this.password, 10);

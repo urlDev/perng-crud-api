@@ -14,12 +14,13 @@ const todoResolvers = {
   },
 
   Mutation: {
-    addTodo: async (parents, { description }, { me, Todo }) => {
+    addTodo: async (parents, { description }, { me, User, Todo }) => {
       try {
-        return await Todo.create({
+        const todo = await Todo.create({
           description,
-          userId: me.id,
         });
+
+        return todo;
       } catch (error) {
         throw new Error(error);
       }
@@ -52,7 +53,7 @@ const todoResolvers = {
   Todo: {
     userId: async (parent, args, { me, User }) => {
       try {
-        const user = await User.findByPk(me.id);
+        const user = await User.findOne({ where: { uuid: me.uuid } });
 
         return user;
       } catch (error) {

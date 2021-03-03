@@ -22,6 +22,8 @@ const server = new ApolloServer({
       Todo,
       secret: process.env.JWT_SECRET,
       me,
+      // Passing req here to be able to use token in req headers
+      req,
     };
   },
 });
