@@ -7,10 +7,19 @@ const {
 const userResolvers = {
   Query: {
     me: async (parent, args, { me, User }) => {
-      const user = await User.findOne({
-        where: { uuid: me.uuid },
-      });
-      return user;
+      try {
+        const user = await User.findOne({
+          where: { uuid: me.uuid },
+        });
+
+        if (!user) {
+          throw new Error('No user found');
+        }
+
+        return user;
+      } catch (error) {
+        throw new Error(error);
+      }
     },
   },
 
@@ -70,7 +79,7 @@ const userResolvers = {
     },
     deleteUser: async (parent, args, { me, User, Todo }) => {
       try {
-        const user = await User.findOne({ where: { id: me.id } });
+        const user = await User.findOne({ where: { uuid: me.uuid } });
 
         // delete all the todos that belongs to the user
         await Todo.destroy({ where: { userId: me.id } });

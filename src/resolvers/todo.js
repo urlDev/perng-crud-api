@@ -1,11 +1,17 @@
 const todoResolvers = {
   Query: {
     todos: async (parent, args, { me, Todo }) => {
-      return await Todo.findAll({ where: { userId: me.id } });
+      try {
+        const todos = await Todo.findAll({ where: { userId: me.id } });
+
+        return todos;
+      } catch (error) {
+        throw new Error(error);
+      }
     },
     todo: async (parent, { uuid }, { me, Todo }) => {
       try {
-        const todo = await Todo.findOne({ where: { uuid } });
+        const todo = await Todo.findOne({ where: { uuid, userId: me.id } });
         return todo;
       } catch (error) {
         throw new Error(error);
@@ -18,6 +24,7 @@ const todoResolvers = {
       try {
         const todo = await Todo.create({
           description,
+          userId: me.id,
         });
 
         return todo;
@@ -27,7 +34,7 @@ const todoResolvers = {
     },
     updateTodo: async (parents, { id, description }, { me, Todo }) => {
       try {
-        let todo = await Todo.findOne({ where: { id } });
+        let todo = await Todo.findOne({ where: { id, userId: me.id } });
 
         todo.description = description;
 
@@ -37,9 +44,9 @@ const todoResolvers = {
         throw new Error(error);
       }
     },
-    deleteTodo: async (parent, { id }, { me, Todo }) => {
+    deleteTodo: async (parents, { id }, { me, Todo }) => {
       try {
-        const todo = await Todo.findOne({ where: { id } });
+        const todo = await Todo.findOne({ where: { id, userId: me.id } });
 
         await todo.destroy();
 
@@ -53,7 +60,7 @@ const todoResolvers = {
   Todo: {
     userId: async (parent, args, { me, User }) => {
       try {
-        const user = await User.findOne({ where: { uuid: me.uuid } });
+        const user = await User.findOne({ where: { id: me.id } });
 
         return user;
       } catch (error) {

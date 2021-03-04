@@ -12,6 +12,8 @@ const app = express();
 
 app.use(cors());
 
+const PORT = process.env.PORT || 4000;
+
 const server = new ApolloServer({
   typeDefs: schema,
   resolvers,
@@ -31,7 +33,7 @@ const server = new ApolloServer({
 server.applyMiddleware({ app, path: '/graphql' });
 
 sequelize.sync({ force: true }).then(() => {
-  app.listen(process.env.PORT, () => {
-    console.log(`🚀 App is listening on ${process.env.PORT}`);
+  app.listen(PORT, () => {
+    console.log(`🚀 App is listening on ${PORT}`);
   });
 });
